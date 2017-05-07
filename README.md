@@ -48,6 +48,4 @@ Markov bot also comes with a variety of bot commands. These bot commands are onl
 
 ####So is there anything wrong with it?
 
-Of course there is. Currently the markov process runs into a problem where there's a very large size discrepancy between the message history and the amount of entry points for the markov chain to start. This causes the bot to pull a lot more messages from its permanent entry set and be biased towards more recent messages. I'm currently looking into the issue and will fix it as soon as possible!
-
-Should you find anything else that needs fixing or if there's a missing feature you require, don't hesitate to contact me!
+Probably! So should you find anything that needs fixing or if there's a missing feature you require, don't hesitate to contact me!
