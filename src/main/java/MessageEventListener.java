@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class MessageEventListener implements IListener<MessageReceivedEvent> {
@@ -63,7 +64,9 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
             BufferedReader br = new BufferedReader(new FileReader(entrysetFile));
             String line;
             while ((line = br.readLine()) != null) {
-                entryset.add(line);
+                if (line.split(" ").length > markovOrder) {
+                    entryset.add(line);
+                }
             }
         } catch (Exception e) {
             System.err.println("Unable to read from " + entrysetFile + ": " + e.getMessage());
@@ -75,7 +78,9 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
             BufferedReader br = new BufferedReader(new FileReader(historyFile));
             String line;
             while ((line = br.readLine()) != null) {
-                history.add(line);
+                if (line.split(" ").length > markovOrder) {
+                    history.add(line);
+                }
             }
         } catch (Exception e) {
             System.err.println("Unable to read from " + historyFile + ": " + e.getMessage());
@@ -304,18 +309,12 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     String reply = mc.getOutput();
                     sendReply(reply, client, chan);
                 } else {
-                    if (history.size() < historySize) {
-                        //prevent markov poisoning via direct messaging
-                        if (!chan.getName().equals(msg.getAuthor().getName())) {
-                            //add new message to markov chain
-                            mc.addToTable(msgContent);
-                        }
-                    } else {
-                        //drop old messages and refresh markov chain
-                        history = history.subList(bufferSize, historySize - 1);
+                    if (history.size() >= historySize) {
+                        history.subList(bufferSize, history.size());
                         mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                         mc.addToTable(entryset);
                         mc.addToTable(history);
+                        System.out.println("Refreshed markov chain.");
                     }
 
                     if (msgContent.split(" ").length > markovOrder) {
@@ -324,20 +323,33 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
 
                         //prevent markov poisoning via direct messaging
                         if (!chan.getName().equals(msg.getAuthor().getName())) {
-                            history.add(msgContent);
-                            System.out.println("Added: \'" + msgContent + "\' to history (size: " + history.size() + ").");
+                            //split messages by newline
+                            for (String line : msgContent.split("\n")) {
+                                if (line.split(" ").length > markovOrder) {
+                                    history.add(line);
+                                    mc.addToTable(line);
+                                    System.out.println("Added: \'" + line + "\' to history (size: " + history.size() + ").");
+                                } else {
+                                    System.out.println("Skipped: \'" + line + "\'");
+                                }
+                            }
                         }
 
                         //save history
                         if (!history.isEmpty() && history.size() % recallInterval == 0) {
                             try {
                                 FileWriter writer = new FileWriter(historyFile);
-                                for (String s : history) {
+
+                                String[] history_arr = new String[history.size()];
+                                history_arr = history.toArray(history_arr); //copy to array to prevent concurrent modification
+                                for (String s : history_arr) {
                                     writer.write(s + "\n");
                                 }
+
                                 writer.close();
                             } catch (Exception e) {
                                 System.err.println("Unable to write to " + historyFile + ": " + e.getMessage());
+                                e.printStackTrace();
                             }
                         }
                     }

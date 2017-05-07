@@ -71,6 +71,7 @@ public class BotProperties {
             writer.close();
         } catch (Exception e) {
             System.err.println("Unable to write to " + filename + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

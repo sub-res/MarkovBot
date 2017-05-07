@@ -37,7 +37,6 @@ public class MarkovChain {
                     key += "[" + atoms.get(i + j) + "]";
                 }
 
-                //TODO: Something goes wrong with adding new elements to starts, investigate
                 if (i == 0) {
                     starts.add(history);
                 }
@@ -60,9 +59,6 @@ public class MarkovChain {
     //get output string from markov chain
     public String getOutput() {
         int rand = r.nextInt(starts.size());
-
-        //DEBUG, REMOVE WHEN ISSUE WITH STARTS IS FIXED
-        System.out.println("NEW MSG:\nrand=" + rand +"\nstarts.size()=" + starts.size());
 
         List<String> output = new ArrayList<>(starts.get(rand));
         int startidx = 0;
