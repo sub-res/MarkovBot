@@ -76,7 +76,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         try {
             BufferedReader br = new BufferedReader(new FileReader(historyFile));
             String line;
-            while ((line = br.readLine()) != null) {
+            while ((line = br.readLine()) != null && entryset.size() < historySize) {
                 if (line.split(" ").length > markovOrder) {
                     history.add(line);
                 }
