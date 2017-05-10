@@ -14,8 +14,6 @@ import java.util.List;
 
 public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private int historySize = Integer.parseInt(BotProperties.instance().get("hist_size"));
-    private int historyMinimum = Integer.parseInt(BotProperties.instance().get("hist_min"));
-    private int bufferSize = Integer.parseInt(BotProperties.instance().get("buf_size"));
     private int recallInterval = Integer.parseInt(BotProperties.instance().get("recall_ival"));
     private int msgInterval = Integer.parseInt(BotProperties.instance().get("msg_ival"));
     private int markovOrder = Integer.parseInt(BotProperties.instance().get("markov_order"));
@@ -25,7 +23,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private String autoChannel = BotProperties.instance().get("auto_channel");
 
     private MarkovChain mc;
-    private List<String> history;
+    private String[] history;
+    private int historyIndex;
     private List<String> entryset;
     private List<String> adminIDs;
     private List<String> bannedIDs;
@@ -72,13 +71,19 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         }
         mc.addToTable(entryset);
 
-        history = new ArrayList<>();
+        history = new String[historySize];
+        for (int i = 0; i < history.length; i++) {
+            history[i] = null;
+        }
+        historyIndex = 0;
+
         try {
             BufferedReader br = new BufferedReader(new FileReader(historyFile));
             String line;
             while ((line = br.readLine()) != null && entryset.size() < historySize) {
                 if (line.split(" ").length > markovOrder) {
-                    history.add(line);
+                    history[historyIndex] = line;
+                    historyIndex = (historyIndex + 1) % historySize;
                 }
             }
         } catch (Exception e) {
@@ -195,14 +200,6 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         historySize = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         setReply = splits[1] + " has been set to " + splits[2];
                         break;
-                    case ("hist_min"):
-                        historyMinimum = Integer.parseInt(BotProperties.instance().get(splits[1]));
-                        setReply = splits[1] + " has been set to " + splits[2];
-                        break;
-                    case ("buf_size"):
-                        bufferSize = Integer.parseInt(BotProperties.instance().get(splits[1]));
-                        setReply = splits[1] + " has been set to " + splits[2];
-                        break;
                     case ("recall_ival"):
                         recallInterval = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         setReply = splits[1] + " has been set to " + splits[2];
@@ -238,7 +235,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 String statusReply = "Status:\n" +
                         "Bot: " + (isOn ? "ON" : "OFF") + "\n" +
                         "Slurring: " + (slurring ? "ON" : "OFF") + "\n" +
-                        "History size: " + history.size() + "\n" +
+                        "History index: " + historyIndex + "\n" +
                         "Message count: " + messageCount + "\n";
                 sendReply(statusReply, msg.getClient(), msg.getChannel());
                 break;
@@ -293,8 +290,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
             messageCount++;
 
             if ((msgContent.contains("<@" + myID + ">")
-                    && System.currentTimeMillis() > lastRequest + cooldownMs
-                    && history.size() >= historyMinimum)) {
+                    && System.currentTimeMillis() > lastRequest + cooldownMs)) {
                 //generate reply when @-mentioned
                 lastRequest = System.currentTimeMillis(); //reset cooldown
                 String reply = mc.getOutput();
@@ -307,19 +303,20 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 String reply = mc.getOutput();
                 sendReply(reply, client, chan);
             } else {
-                if (history.size() >= historySize) {
-                    history.subList(bufferSize, history.size());
-                    mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
-                    mc.addToTable(entryset);
-                    mc.addToTable(history);
-                    System.out.println("Refreshed markov chain.");
-                }
-
                 for (String line : msgContent.split("\n")) {
                     if (line.split(" ").length > markovOrder) {
-                        history.add(line);
+                        //refresh if recall interval is reached
+                        if (historyIndex % recallInterval == 0) {
+                            mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                            mc.addToTable(entryset);
+                            mc.addToTable(history);
+                            System.out.println("Refreshed markov chain.");
+                        }
+
                         mc.addToTable(line);
-                        System.out.println("Added: \'" + line + "\' to history (size: " + history.size() + ").");
+                        history[historyIndex] = line;
+                        System.out.println("Added: \'" + line + "\' to history (index: " + historyIndex + ").");
+                        historyIndex = (historyIndex + 1) % historySize;
                     } else {
                         System.out.println("Skipped: \'" + line + "\'");
                     }
@@ -327,14 +324,14 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
             }
 
             //save history
-            if (!history.isEmpty() && history.size() % recallInterval == 0) {
+            if (historyIndex % recallInterval == 0) {
                 try {
                     FileWriter writer = new FileWriter(historyFile);
 
-                    String[] history_arr = new String[history.size()];
-                    history_arr = history.toArray(history_arr); //copy to array to prevent concurrent modification
-                    for (String s : history_arr) {
-                        writer.write(s + "\n");
+                    for (String s : history) {
+                        if (s != null) {
+                            writer.write(s + "\n");
+                        }
                     }
 
                     writer.close();

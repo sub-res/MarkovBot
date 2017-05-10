@@ -14,6 +14,10 @@ public class MarkovChain2 extends MarkovChain{
 
     @Override
     public void addToTable(String input) {
+        if (input == null) {
+            return;
+        }
+
         List<String> atoms = atomize(input);
 
         if (atoms.size() >= order + 1) {

@@ -17,6 +17,13 @@ public class MarkovChain {
         r = new Random();
     }
 
+    //Incorporate array of strings into markov table
+    public void addToTable(String[] inputs) {
+        for (String input : inputs) {
+            addToTable(input);
+        }
+    }
+
     //Incorporate list of strings into markov table
     public void addToTable(List<String> inputs) {
         for (String input : inputs) {
@@ -26,6 +33,10 @@ public class MarkovChain {
 
     //Incorporate string into markov table
     public void addToTable(String input) {
+        if (input == null) {
+            return;
+        }
+
         List<String> atoms = atomize(input);
 
         if (atoms.size() >= order + 1) {
