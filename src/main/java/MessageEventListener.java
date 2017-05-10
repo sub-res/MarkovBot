@@ -87,7 +87,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         mc.addToTable(history);
     }
 
-    //@Override
+    @Override
     public void handle(MessageReceivedEvent event) {
         if (event.getMessage().getContent().startsWith("!") &&
                 adminIDs.contains(event.getMessage().getAuthor().getStringID())) {
@@ -288,70 +288,59 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
 
         String myID = client.getOurUser().getStringID();
 
-        if (!msg.getAuthor().getStringID().equals(client.getOurUser().getStringID())) {
-            String[] words = msgContent.split(" ");
-            if (words.length > 0) {
-                messageCount++;
+        if (!msg.getAuthor().getStringID().equals(client.getOurUser().getStringID())
+                && !chan.getName().equals(msg.getAuthor().getName())) {
+            messageCount++;
 
-                if ((msgContent.contains("<@" + myID + ">")
-                        && System.currentTimeMillis() > lastRequest + cooldownMs
-                        && history.size() >= historyMinimum)) {
-                    //generate reply when @-mentioned
-                    lastRequest = System.currentTimeMillis(); //reset cooldown
-                    String reply = mc.getOutput();
-                    sendReply(reply, client, chan);
-                } else if (messageCount >= msgInterval
-                        && msg.getChannel().getName().equals(autoChannel)) {
-                    //limit autoresponse to channel
-                    //automatic response every msgInterval amount of messages
-                    messageCount = 0;
-                    String reply = mc.getOutput();
-                    sendReply(reply, client, chan);
-                } else {
-                    if (history.size() >= historySize) {
-                        history.subList(bufferSize, history.size());
-                        mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
-                        mc.addToTable(entryset);
-                        mc.addToTable(history);
-                        System.out.println("Refreshed markov chain.");
+            if ((msgContent.contains("<@" + myID + ">")
+                    && System.currentTimeMillis() > lastRequest + cooldownMs
+                    && history.size() >= historyMinimum)) {
+                //generate reply when @-mentioned
+                lastRequest = System.currentTimeMillis(); //reset cooldown
+                String reply = mc.getOutput();
+                sendReply(reply, client, chan);
+            } else if (messageCount >= msgInterval
+                    && msg.getChannel().getName().equals(autoChannel)) {
+                //limit autoresponse to channel
+                //automatic response every msgInterval amount of messages
+                messageCount = 0;
+                String reply = mc.getOutput();
+                sendReply(reply, client, chan);
+            } else {
+                if (history.size() >= historySize) {
+                    history.subList(bufferSize, history.size());
+                    mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                    mc.addToTable(entryset);
+                    mc.addToTable(history);
+                    System.out.println("Refreshed markov chain.");
+                }
+
+                for (String line : msgContent.split("\n")) {
+                    if (line.split(" ").length > markovOrder) {
+                        history.add(line);
+                        mc.addToTable(line);
+                        System.out.println("Added: \'" + line + "\' to history (size: " + history.size() + ").");
+                    } else {
+                        System.out.println("Skipped: \'" + line + "\'");
+                    }
+                }
+            }
+
+            //save history
+            if (!history.isEmpty() && history.size() % recallInterval == 0) {
+                try {
+                    FileWriter writer = new FileWriter(historyFile);
+
+                    String[] history_arr = new String[history.size()];
+                    history_arr = history.toArray(history_arr); //copy to array to prevent concurrent modification
+                    for (String s : history_arr) {
+                        writer.write(s + "\n");
                     }
 
-                    if (msgContent.split(" ").length > markovOrder) {
-                        //NOTE: Still talks to itself
-                        //add message to markov chain
-
-                        //prevent markov poisoning via direct messaging
-                        if (!chan.getName().equals(msg.getAuthor().getName())) {
-                            //split messages by newline
-                            for (String line : msgContent.split("\n")) {
-                                if (line.split(" ").length > markovOrder) {
-                                    history.add(line);
-                                    mc.addToTable(line);
-                                    System.out.println("Added: \'" + line + "\' to history (size: " + history.size() + ").");
-                                } else {
-                                    System.out.println("Skipped: \'" + line + "\'");
-                                }
-                            }
-                        }
-
-                        //save history
-                        if (!history.isEmpty() && history.size() % recallInterval == 0) {
-                            try {
-                                FileWriter writer = new FileWriter(historyFile);
-
-                                String[] history_arr = new String[history.size()];
-                                history_arr = history.toArray(history_arr); //copy to array to prevent concurrent modification
-                                for (String s : history_arr) {
-                                    writer.write(s + "\n");
-                                }
-
-                                writer.close();
-                            } catch (Exception e) {
-                                System.err.println("Unable to write to " + historyFile + ": " + e.getMessage());
-                                e.printStackTrace();
-                            }
-                        }
-                    }
+                    writer.close();
+                } catch (Exception e) {
+                    System.err.println("Unable to write to " + historyFile + ": " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }

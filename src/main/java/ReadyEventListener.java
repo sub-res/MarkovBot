@@ -8,7 +8,7 @@ import java.io.File;
 
 public class ReadyEventListener implements IListener<ReadyEvent> {
 
-    //@Override
+    @Override
     public void handle(ReadyEvent event) {
         try {
             event.getClient().changeUsername(BotProperties.instance().get("bot_name"));
