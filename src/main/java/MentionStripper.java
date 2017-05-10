@@ -43,18 +43,18 @@ public class MentionStripper {
     private static String getUserName(String id, IChannel chan) {
         String strippedID = id.replaceAll("[!<>@]", ""); //strip non-numeric
 
-        if (strippedID.equals(chan.getClient().getOurUser().getID())) {
+        if (strippedID.equals(chan.getClient().getOurUser().getStringID())) {
             return id;
         }
 
         //reverse username lookup, not very pretty
         //maybe bring this up w/ Discord4j devs?
         for (IUser user : chan.getUsersHere()) {
-            if (user.getID().equals(strippedID)) {
+            if (user.getStringID().equals(strippedID)) {
                 try {
                     return user.getDisplayName(chan.getGuild());
                 } catch (NoSuchElementException e) {
-                    return user.getNicknameForGuild(chan.getGuild()).get();
+                    return user.getNicknameForGuild(chan.getGuild());
                 }
 
             }
@@ -68,7 +68,7 @@ public class MentionStripper {
         String strippedID = id.replaceAll("[&<>@]", ""); //strip non-numeric
 
         for (IRole role : chan.getGuild().getRoles()) {
-            if (role.getID().equals(strippedID)) {
+            if (role.getStringID().equals(strippedID)) {
                 return role.getName();
             }
         }

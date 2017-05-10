@@ -1,6 +1,6 @@
 import sx.blah.discord.api.IDiscordClient;
 import sx.blah.discord.api.events.IListener;
-import sx.blah.discord.handle.impl.events.MessageReceivedEvent;
+import sx.blah.discord.handle.impl.events.guild.channel.message.MessageReceivedEvent;
 import sx.blah.discord.handle.obj.IChannel;
 import sx.blah.discord.handle.obj.IMessage;
 import sx.blah.discord.handle.obj.IUser;
@@ -10,7 +10,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class MessageEventListener implements IListener<MessageReceivedEvent> {
@@ -91,10 +90,10 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     //@Override
     public void handle(MessageReceivedEvent event) {
         if (event.getMessage().getContent().startsWith("!") &&
-                adminIDs.contains(event.getMessage().getAuthor().getID())) {
+                adminIDs.contains(event.getMessage().getAuthor().getStringID())) {
             handleConfigMsg(event); //config msg handling
         }
-        else if (!bannedIDs.contains(event.getMessage().getAuthor().getID()) && isOn){
+        else if (!bannedIDs.contains(event.getMessage().getAuthor().getStringID()) && isOn){
             handleNormalMsg(event); //handle other messages
         }
     }
@@ -110,8 +109,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     String reply = "";
 
                     for (IUser user : msg.getMentions()) {
-                        if (!adminIDs.contains(user.getID())) {
-                            adminIDs.add(user.getID());
+                        if (!adminIDs.contains(user.getStringID())) {
+                            adminIDs.add(user.getStringID());
                         }
                         reply += user.getDisplayName(msg.getGuild()) + " ";
                     }
@@ -127,7 +126,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     String reply = "";
 
                     for (IUser user : msg.getMentions()) {
-                        adminIDs.remove(user.getID());
+                        adminIDs.remove(user.getStringID());
                         reply += user.getDisplayName(msg.getGuild()) + " ";
                     }
                     saveIDs();
@@ -142,8 +141,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     String reply = "Banned ";
 
                     for (IUser user : msg.getMentions()) {
-                        if (!bannedIDs.contains(user.getID())) {
-                            bannedIDs.add(user.getID());
+                        if (!bannedIDs.contains(user.getStringID())) {
+                            bannedIDs.add(user.getStringID());
                         }
                         reply += user.getDisplayName(msg.getGuild()) + " ";
                     }
@@ -159,7 +158,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     String reply = "Unbanned ";
 
                     for (IUser user : msg.getMentions()) {
-                        bannedIDs.remove(user.getID());
+                        bannedIDs.remove(user.getStringID());
                         reply += user.getDisplayName(msg.getGuild()) + " ";
                     }
                     saveIDs();
@@ -287,9 +286,9 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
 
         msgContent = MentionStripper.stripMentions(msgContent, chan);
 
-        String myID = client.getOurUser().getID();
+        String myID = client.getOurUser().getStringID();
 
-        if (!msg.getAuthor().getID().equals(client.getOurUser().getID())) {
+        if (!msg.getAuthor().getStringID().equals(client.getOurUser().getStringID())) {
             String[] words = msgContent.split(" ");
             if (words.length > 0) {
                 messageCount++;
