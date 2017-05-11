@@ -23,8 +23,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private String autoChannel = BotProperties.instance().get("auto_channel");
 
     private MarkovChain mc;
-    private String[] history;
-    private int historyIndex;
+    private HistoryBuffer history;
     private List<String> entryset;
     private List<String> adminIDs;
     private List<String> bannedIDs;
@@ -71,25 +70,19 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         }
         mc.addToTable(entryset);
 
-        history = new String[historySize];
-        for (int i = 0; i < history.length; i++) {
-            history[i] = null;
-        }
-        historyIndex = 0;
-
+        history = new HistoryBuffer(historySize);
         try {
             BufferedReader br = new BufferedReader(new FileReader(historyFile));
             String line;
             while ((line = br.readLine()) != null && entryset.size() < historySize) {
                 if (line.split(" ").length > markovOrder) {
-                    history[historyIndex] = line;
-                    historyIndex = (historyIndex + 1) % historySize;
+                    history.add(line);
                 }
             }
         } catch (Exception e) {
             System.err.println("Unable to read from " + historyFile + ": " + e.getMessage());
         }
-        mc.addToTable(history);
+        mc.addToTable(history.getBuffer());
     }
 
     @Override
@@ -177,7 +170,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 slurring = !slurring;
                 mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                 mc.addToTable(entryset);
-                mc.addToTable(history);
+                mc.addToTable(history.getBuffer());
                 sendReply((slurring ? "Chugging rum!" : "Rum wore off..."), msg.getClient(), msg.getChannel());
                 break;
 
@@ -212,7 +205,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         markovOrder = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                         mc.addToTable(entryset);
-                        mc.addToTable(history);
+                        mc.addToTable(history.getBuffer());
                         setReply = splits[1] + " has been set to " + splits[2];
                         break;
                     case ("cooldown_ms"):
@@ -235,7 +228,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 String statusReply = "Status:\n" +
                         "Bot: " + (isOn ? "ON" : "OFF") + "\n" +
                         "Slurring: " + (slurring ? "ON" : "OFF") + "\n" +
-                        "History index: " + historyIndex + "\n" +
+                        "History index: " + history.index() + "\n" +
                         "Message count: " + messageCount + "\n";
                 sendReply(statusReply, msg.getClient(), msg.getChannel());
                 break;
@@ -306,29 +299,28 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 for (String line : msgContent.split("\n")) {
                     if (line.split(" ").length > markovOrder) {
                         //refresh if recall interval is reached
-                        if (historyIndex % recallInterval == 0) {
+                        if (history.index() % recallInterval == 0) {
                             mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                             mc.addToTable(entryset);
-                            mc.addToTable(history);
+                            mc.addToTable(history.getBuffer());
                             System.out.println("Refreshed markov chain.");
                         }
 
                         mc.addToTable(line);
-                        history[historyIndex] = line;
-                        System.out.println("Added: \'" + line + "\' to history (index: " + historyIndex + ").");
-                        historyIndex = (historyIndex + 1) % historySize;
+                        System.out.println("Adding: \'" + line + "\' to history (index: " + history.index() + ").");
+                        history.add(line);
                     } else {
-                        System.out.println("Skipped: \'" + line + "\'");
+                        System.out.println("Skipping: \'" + line + "\'");
                     }
                 }
             }
 
             //save history
-            if (historyIndex % recallInterval == 0) {
+            if (history.index() % recallInterval == 0) {
                 try {
                     FileWriter writer = new FileWriter(historyFile);
 
-                    for (String s : history) {
+                    for (String s : history.getBuffer()) {
                         if (s != null) {
                             writer.write(s + "\n");
                         }
