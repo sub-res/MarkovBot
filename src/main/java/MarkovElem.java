@@ -42,6 +42,7 @@ public class MarkovElem {
 
     public String getInfo() {
         String str = "";
+        final int MAX_ELEM = 5;
 
         Comparator<Map.Entry<String, Integer>> comp = new Comparator<Map.Entry<String, Integer>>() {
             @Override
@@ -52,8 +53,13 @@ public class MarkovElem {
         List<Map.Entry<String, Integer>> entrySet = new LinkedList<>(nexts.entrySet());
         Collections.sort(entrySet, comp);
 
+        int ctr = 0;
         for (Map.Entry<String, Integer> entry : entrySet) {
-            str += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
+            str += "(" + entry.getKey() + "," + entry.getValue() + ")";
+            ctr++;
+            if (ctr >= MAX_ELEM) {
+                break;
+            }
         }
         return str;
     }
