@@ -237,26 +237,34 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 sendReply(BotProperties.instance().getDump(), msg.getClient(), msg.getChannel());
                 break;
 
+            case ("!chain"):
+                sendReply(mc.getInfo(), msg.getClient(), msg.getChannel());
+                break;
+
             case ("!help"):
                 String helpReply = "Commands: \n" +
-                        "**!register @UserName**\n" +
+                        "``!register @UserName``\n" +
                         "Register one or more users for bot access.\n" +
-                        "**!unregister @UserName**\n" +
+                        "``!unregister @UserName``\n" +
                         "Unregister one or more users from bot access.\n" +
-                        "**!ban @UserName**\n" +
+                        "``!ban @UserName``\n" +
                         "Ban one or more users  from bot usage.\n" +
-                        "**!unban @UserName**\n" +
+                        "``!unban @UserName``\n" +
                         "Unban one or more users from bot usage.\n" +
-                        "**!rum**\n" +
+                        "``!rum``\n" +
                         "JESUS PUT DOWN THAT RUM!\n" +
-                        "**!toggle**\n" +
+                        "``!toggle``\n" +
                         "Toggle bot activation.\n" +
-                        "**!set [property_name] [value]**\n" +
+                        "``!set [property_name] [value]``\n" +
                         "Set a property.\n" +
-                        "**!save**\n" +
+                        "``!save``\n" +
                         "Save properties so they persist after rebooting.\n" +
-                        "**!properties**\n" +
-                        "Show available properties with current values. Properties that are **[restricted]** cannot be changed with **!set**.\n";
+                        "``!properties``\n" +
+                        "Show available properties with current values. Properties that are ``[restricted]`` cannot be changed with ``!set``.\n" +
+                        "``!status``\n" +
+                        "Show quick rundown of bot status.\n" +
+                        "``!chain``\n" +
+                        "Show current markov chain values.\n";
                 sendReply(helpReply, msg.getClient(), msg.getChannel());
                 break;
 

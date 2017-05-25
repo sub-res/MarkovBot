@@ -36,13 +36,14 @@ Markov bot also comes with a variety of bot commands. These bot commands are onl
 * ``!register @UserName`` registers one or more users for bot access.
 * ``!unregister @UserName`` unregisters one or more users from bot access.
 * ``!ban @UserName`` bans one or more users  from bot usage.
-* ``unban @UserName`` unbans one or more users from bot usage.
+* ``!unban @UserName`` unbans one or more users from bot usage.
 * ``!rum`` makes Markov Bot enter slurring mode, where it builds a markov chain built on individual letters rather than words, making it seem like the bot had a little too much to drink.
 * ``!toggle`` toggles bot activation.
 * ``!set [property_name] [value]`` sets a property that's specified in config.ini if it's not restricted.
 * ``!save`` saves properties so they persist after rebooting.
 * ``!properties`` shows available properties with current values. Properties that are ``[restricted]`` cannot be changed with ``!set``.
 * ``!status`` shows minor debug information such as history size, number of messages since last autopost, whether the bot is on or not and whether slurring mode is on or not.
+* ``!chain`` shows the current markov chain state. Very abusable to find word combinations to use for poisoning the markov chain!
 
 ####So is there anything wrong with it?
 

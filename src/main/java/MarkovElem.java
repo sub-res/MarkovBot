@@ -1,6 +1,4 @@
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 public class MarkovElem {
     private Map<String, Integer> nexts;
@@ -38,9 +36,23 @@ public class MarkovElem {
         }
     }
 
+    public Integer nextsCount() {
+        return nexts.size();
+    }
+
     public String getInfo() {
         String str = "";
-        for (Map.Entry<String, Integer> entry : nexts.entrySet()) {
+
+        Comparator<Map.Entry<String, Integer>> comp = new Comparator<Map.Entry<String, Integer>>() {
+            @Override
+            public int compare(Map.Entry<String, Integer> t0, Map.Entry<String, Integer> t1) {
+                return t1.getValue().compareTo(t0.getValue());
+            }
+        };
+        List<Map.Entry<String, Integer>> entrySet = new LinkedList<>(nexts.entrySet());
+        Collections.sort(entrySet, comp);
+
+        for (Map.Entry<String, Integer> entry : entrySet) {
             str += "(" + entry.getKey() + ", " + entry.getValue() + ") ";
         }
         return str;

@@ -5,6 +5,7 @@ public class MarkovChain {
     protected Map<String, MarkovElem> table;
     protected List<List<String>> starts;
     protected Random r;
+    protected final int CHAR_LIMIT = 2000;
 
     //ctor
     public MarkovChain(){}
@@ -98,10 +99,32 @@ public class MarkovChain {
     }
 
     //list markov elements with next markov elements and probability
-    public void print() {
-        for (Map.Entry<String, MarkovElem> entry : table.entrySet()) {
-            System.out.println(entry.getKey() + ":" + entry.getValue().getInfo());
+    public String getInfo() {
+        String result = "```";
+        int len = 0;
+        final int BACKTICKS = 6;
+
+        Comparator<Map.Entry<String, MarkovElem>> comp = new Comparator<Map.Entry<String, MarkovElem>>() {
+            @Override
+            public int compare(Map.Entry<String, MarkovElem> t0, Map.Entry<String, MarkovElem> t1) {
+                return t1.getValue().nextsCount().compareTo(t0.getValue().nextsCount());
+            }
+        };
+
+        List<Map.Entry<String, MarkovElem>> entrySet = new LinkedList<>(table.entrySet());
+        Collections.sort(entrySet, comp);
+
+        for (Map.Entry<String, MarkovElem> entry : entrySet) {
+            String newEntry = entry.getKey() + ":" + entry.getValue().getInfo() + "\n";
+            if (len + newEntry.length() + BACKTICKS <= CHAR_LIMIT) {
+                result += newEntry;
+                len += newEntry.length();
+            } else {
+                break; //stop reading once char limit is about to be reached
+            }
         }
+
+        return result + "```";
     }
 
     private List<String> atomize(String s) {
