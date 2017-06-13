@@ -5,6 +5,7 @@ public class MarkovChain {
     protected Map<String, MarkovElem> table;
     protected List<List<String>> starts;
     protected Random r;
+    protected boolean caseSensitive;
     protected final int CHAR_LIMIT = 2000;
 
     //ctor
@@ -16,6 +17,7 @@ public class MarkovChain {
         table = new HashMap<>();
         starts = new ArrayList<>();
         r = new Random();
+        caseSensitive = false; //TODO: make this configurable from config and bot commands
     }
 
     //Incorporate array of strings into markov table
@@ -43,11 +45,13 @@ public class MarkovChain {
         if (atoms.size() >= order + 1) {
             for (int i = 0; i < atoms.size() - order + 1; i++) {
                 List<String> history = new ArrayList<>();
-                String key = "";
+                List<String> keycomps = new ArrayList<>();
                 for (int j = 0; j < order; j++) {
                     history.add(atoms.get(i + j));
-                    key += "[" + atoms.get(i + j) + "]";
+                    keycomps.add(atoms.get(i + j));
                 }
+
+                String key = buildKey(keycomps);
 
                 if (i == 0) {
                     starts.add(history);
@@ -76,10 +80,12 @@ public class MarkovChain {
         int startidx = 0;
 
         while (true) {
-            String key = "";
+            List<String> keycomps = new ArrayList<>();
             for (int i = 0; i < order; i++) {
-                key += "[" + output.get(startidx + i) + "]";
+                keycomps.add(output.get(startidx + i));
             }
+
+            String key = buildKey(keycomps);
 
             String next = table.get(key).getNext(r);
             if (next.isEmpty()) {
@@ -129,5 +135,13 @@ public class MarkovChain {
 
     private List<String> atomize(String s) {
         return Arrays.asList(s.split(" "));
+    }
+
+    protected String buildKey(List<String> prevs) {
+        String key = "";
+        for (String s : prevs) {
+            key += "[" + (caseSensitive ? s : s.toLowerCase()) + "]";
+        }
+        return key;
     }
 }
