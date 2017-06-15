@@ -225,11 +225,17 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 break;
 
             case ("!status"):
+                final int mb = 1024 * 2014;
+                Runtime rt = Runtime.getRuntime();
+                long heap_used_MB = (rt.totalMemory() - rt.freeMemory()) / mb;
+                long heap_total_MB = rt.totalMemory() / mb;
+                long heap_max_MB = rt.maxMemory() / mb;
                 String statusReply = "Status:\n" +
                         "Bot: " + (isOn ? "ON" : "OFF") + "\n" +
                         "Slurring: " + (slurring ? "ON" : "OFF") + "\n" +
                         "History index: " + history.index() + "\n" +
-                        "Message count: " + messageCount + "\n";
+                        "Autopost counter: " + messageCount + "\n" +
+                        "Memory usage: " + heap_used_MB + "MB/" + heap_total_MB + "MB (max: " + heap_max_MB +"MB)";
                 sendReply(statusReply, msg.getClient(), msg.getChannel());
                 break;
 
