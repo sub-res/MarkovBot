@@ -47,7 +47,7 @@ public class MarkovChain {
                 List<String> history = new ArrayList<>();
                 List<String> keycomps = new ArrayList<>();
                 for (int j = 0; j < order; j++) {
-                    history.add(atoms.get(i + j));
+                    history.add(StringPool.manualIntern(atoms.get(i + j)));
                     keycomps.add(atoms.get(i + j));
                 }
 
@@ -59,7 +59,7 @@ public class MarkovChain {
 
                 String next = ""; //empty string is end of chain
                 if (i + order < atoms.size()) {
-                    next = atoms.get(i + order);
+                    next = StringPool.manualIntern(atoms.get(i + order));
                 }
 
                 if (!table.containsKey(key)) {
