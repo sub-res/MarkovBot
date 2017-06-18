@@ -2,11 +2,10 @@ import java.util.*;
 
 public class MarkovChain {
     protected int order;
-    protected Map<String, MarkovElem> table;
-    protected List<List<String>> starts;
+    protected Map<String, BiDiMarkovElem> table;
     protected Random r;
-    protected boolean caseSensitive;
     protected final int CHAR_LIMIT = 2000;
+    protected final String RECORD_SEPARATOR = "\u241e";
 
     //ctor
     public MarkovChain(){}
@@ -15,9 +14,7 @@ public class MarkovChain {
     public MarkovChain(int order) {
         this.order = order;
         table = new HashMap<>();
-        starts = new ArrayList<>();
         r = new Random();
-        caseSensitive = false; //TODO: make this configurable from config and bot commands
     }
 
     //Incorporate array of strings into markov table
@@ -53,30 +50,108 @@ public class MarkovChain {
 
                 String key = buildKey(keycomps);
 
-                if (i == 0) {
-                    starts.add(history);
-                }
-
                 String next = ""; //empty string is end of chain
                 if (i + order < atoms.size()) {
                     next = StringPool.manualIntern(atoms.get(i + order));
                 }
 
                 if (!table.containsKey(key)) {
-                    table.put(key, new MarkovElem());
+                    table.put(key, new BiDiMarkovElem(new MarkovElem()));
                 }
-                table.get(key).addOccurrence(next);
+                table.get(key).right.addOccurrence(next);
             }
+
+            //go through atoms in reverse to build left side MarkovElem
+            for (int i = atoms.size() - 1; i >= order - 1; i--) {
+                List<String> history = new ArrayList<>();
+                List<String> keycomps = new ArrayList<>();
+                for (int j = 0; j < order; j++) {
+                    history.add(StringPool.manualIntern(atoms.get(i - j)));
+                    keycomps.add(atoms.get(i - j));
+                }
+
+                Collections.reverse(keycomps);
+                String key = buildKey(keycomps);
+
+                String next = ""; //empty string is end of chain
+                if (i - order >= 0) {
+                    next = StringPool.manualIntern(atoms.get(i - order));
+                }
+
+                if (table.get(key).left == null) {
+                    table.get(key).left = new MarkovElem();
+                }
+                table.get(key).left.addOccurrence(next);
+            }
+
         } else { //skip sentences that don't fit into markov chain of this order
             System.out.println("Skipped: \'" + input + "\'");
         }
     }
 
-    //get output string from markov chain
     public String getOutput() {
-        int rand = r.nextInt(starts.size());
+        List<String> keys = new ArrayList<>(table.keySet());
+        String[] arr_temp = keys.get(r.nextInt(keys.size())).split(RECORD_SEPARATOR);
 
-        List<String> output = new ArrayList<>(starts.get(rand));
+        List<String> startLeft = new ArrayList<>();
+        List<String> startRight = new ArrayList<>();
+        for (String s : arr_temp) {
+            if (!s.isEmpty()) { //remove empty strings caused by split
+                startLeft.add(s);
+                startRight.add(s);
+            }
+        }
+
+        String right = getOutputRight(startRight);
+        String left = getOutputLeft(startLeft);
+
+        return left + right;
+    }
+
+    public String getOutputWith(List<String> with) {
+        String key_kinda = buildKey(with);
+        List<String> possibles = new ArrayList<>();
+        for (Map.Entry<String, BiDiMarkovElem> entry : table.entrySet()) {
+            if (entry.getKey().contains(key_kinda)) {
+                possibles.add(entry.getKey());
+            }
+        }
+
+        if (possibles.size() == 0) {
+            return getOutput();
+        }
+
+        String[] arr_temp = possibles.get(r.nextInt(possibles.size())).split(RECORD_SEPARATOR);
+        List<String> startLeft = new ArrayList<>();
+        List<String> startRight = new ArrayList<>();
+        for (String s : arr_temp) {
+            if (!s.isEmpty()) { //remove empty strings caused by split
+                startLeft.add(s);
+                startRight.add(s);
+            }
+        }
+
+        String right = getOutputRight(startRight);
+        String left = getOutputLeft(startLeft);
+
+        return left + right;
+    }
+
+    //get output string from markov chain
+    private String getOutputRight(List<String> start) {
+        List<String> output = new ArrayList<>();
+        for (String s : start) {
+            output.add(s);
+        }
+
+        if (output.size() < order) {
+            String out = "";
+            for (String s : output) {
+                out += s + " ";
+            }
+            return out;
+        }
+
         int startidx = 0;
 
         while (true) {
@@ -87,7 +162,7 @@ public class MarkovChain {
 
             String key = buildKey(keycomps);
 
-            String next = table.get(key).getNext(r);
+            String next = table.get(key).right.getNext(r);
             if (next.isEmpty()) {
                 break;
             }
@@ -104,33 +179,46 @@ public class MarkovChain {
         return outputStr;
     }
 
-    //list markov elements with next markov elements and probability
-    public String getInfo() {
-        String result = "```";
-        int len = 0;
-        final int BACKTICKS = 6;
+    private String getOutputLeft(List<String> start)
+    {
+        List<String> output = new ArrayList<>();
+        for (String s : start) {
+            output.add(s);
+        }
 
-        Comparator<Map.Entry<String, MarkovElem>> comp = new Comparator<Map.Entry<String, MarkovElem>>() {
-            @Override
-            public int compare(Map.Entry<String, MarkovElem> t0, Map.Entry<String, MarkovElem> t1) {
-                return t1.getValue().nextsCount().compareTo(t0.getValue().nextsCount());
+        if (output.size() < order) {
+            return "";
+        }
+
+        while (true) {
+            List<String> keycomps = new ArrayList<>();
+            for (int i = 0; i < order; i++) {
+                keycomps.add(output.get(i));
             }
-        };
 
-        List<Map.Entry<String, MarkovElem>> entrySet = new LinkedList<>(table.entrySet());
-        Collections.sort(entrySet, comp);
+            String key = buildKey(keycomps);
 
-        for (Map.Entry<String, MarkovElem> entry : entrySet) {
-            String newEntry = entry.getKey() + ":" + entry.getValue().getInfo() + "\n";
-            if (len + newEntry.length() + BACKTICKS <= CHAR_LIMIT) {
-                result += newEntry;
-                len += newEntry.length();
-            } else {
-                break; //stop reading once char limit is about to be reached
+            String next = table.get(key).left.getNext(r);
+            if (next.isEmpty()) {
+                break;
+            }
+
+            output.add(0, next);
+        }
+
+        Collections.reverse(output);
+        for (int i = 0; i < order; i++) {
+            output.remove(0);
+        }
+
+        String outputString = "";
+        for (String s : output) {
+            if (!s.isEmpty()) {
+                outputString = s + " " + outputString;
             }
         }
 
-        return result + "```";
+        return outputString;
     }
 
     private List<String> atomize(String s) {
@@ -138,10 +226,19 @@ public class MarkovChain {
     }
 
     protected String buildKey(List<String> prevs) {
-        String key = "";
-        for (String s : prevs) {
-            key += "[" + (caseSensitive ? s : s.toLowerCase()) + "]";
+        String key = RECORD_SEPARATOR;
+        for (int i = 0; i < prevs.size(); i++) {
+            key += prevs.get(i) + RECORD_SEPARATOR;
         }
         return key;
+    }
+
+    protected class BiDiMarkovElem {
+        public MarkovElem right = null;
+        public MarkovElem left = null;
+
+        BiDiMarkovElem(MarkovElem right) {
+            this.right = right;
+        }
     }
 }

@@ -300,7 +300,21 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     && System.currentTimeMillis() > lastRequest + cooldownMs)) {
                 //generate reply when @-mentioned
                 lastRequest = System.currentTimeMillis(); //reset cooldown
-                String reply = mc.getOutput();
+                String reply;
+
+                if (msgContent.startsWith("<@" + myID + ">")) {
+                    String[] splits = msgContent.split(" ");
+                    List<String> splitsList = new ArrayList<>();
+                    for (int i = 0; i < splits.length && splitsList.size() < markovOrder; i++) {
+                        if (!splits[i].isEmpty() && !splits[i].contains("<@" + myID + ">")) {
+                            splitsList.add(splits[i]);
+                        }
+                    }
+
+                    reply = mc.getOutputWith(splitsList);
+                } else {
+                    reply = mc.getOutput();
+                }
                 sendReply(reply, client, chan);
             } else if (messageCount >= msgInterval
                     && msg.getChannel().getName().equals(autoChannel)) {
