@@ -243,10 +243,6 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 sendReply(BotProperties.instance().getDump(), msg.getClient(), msg.getChannel());
                 break;
 
-            case ("!chain"):
-                sendReply(mc.getInfo(), msg.getClient(), msg.getChannel());
-                break;
-
             case ("!help"):
                 String helpReply = "Commands: \n" +
                         "``!register @UserName``\n" +
@@ -268,9 +264,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         "``!properties``\n" +
                         "Show available properties with current values. Properties that are ``[restricted]`` cannot be changed with ``!set``.\n" +
                         "``!status``\n" +
-                        "Show quick rundown of bot status.\n" +
-                        "``!chain``\n" +
-                        "Show current markov chain values.\n";
+                        "Show quick rundown of bot status.\n";
                 sendReply(helpReply, msg.getClient(), msg.getChannel());
                 break;
 
