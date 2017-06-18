@@ -11,6 +11,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private int historySize = Integer.parseInt(BotProperties.instance().get("hist_size"));
@@ -294,22 +295,17 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     && System.currentTimeMillis() > lastRequest + cooldownMs)) {
                 //generate reply when @-mentioned
                 lastRequest = System.currentTimeMillis(); //reset cooldown
-                String reply;
 
-                if (msgContent.startsWith("<@" + myID + ">")) {
-                    String[] splits = msgContent.split(" ");
-                    List<String> splitsList = new ArrayList<>();
-                    for (int i = 0; i < splits.length && splitsList.size() < markovOrder; i++) {
-                        if (!splits[i].isEmpty() && !splits[i].contains("<@" + myID + ">")) {
-                            splitsList.add(splits[i]);
-                        }
-                    }
-
-                    reply = mc.getOutputWith(splitsList);
-                } else {
-                    reply = mc.getOutput();
+                List<String> terms = getTerms(msgContent);
+                if (terms.size() > markovOrder) {
+                    terms = terms.subList(0, markovOrder);
                 }
-                sendReply(reply, client, chan);
+
+                if (terms.size() > 0) {
+                    sendReply(mc.getOutputWith(terms), client, chan);
+                } else {
+                    sendReply(mc.getOutput(), client, chan);
+                }
             } else if (messageCount >= msgInterval
                     && msg.getChannel().getName().equals(autoChannel)) {
                 //limit autoresponse to channel
@@ -393,5 +389,21 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         }
         BotProperties.instance().set("admin_ids", newAdminIDs);
         BotProperties.instance().set("banned_ids", newBannedIDs);
+    }
+
+    private List<String> getTerms(String msg) {
+        List<String> terms = new ArrayList<>();
+        Scanner sc = new Scanner(msg);
+        for (String s ; (s = sc.findWithinHorizon("\"(.*?)\"", 0)) != null;) {
+            s = s.substring(1, s.length() - 1); //strip quotes
+            String[] splits = s.split(" ");
+            for (String split : splits) {
+                if (!split.isEmpty()) {
+                    terms.add(split);
+                }
+            }
+        }
+
+        return terms;
     }
 }
