@@ -297,15 +297,12 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 lastRequest = System.currentTimeMillis(); //reset cooldown
 
                 List<String> terms = getTerms(msgContent);
-                if (terms.size() > markovOrder) {
-                    terms = terms.subList(0, markovOrder);
-                }
-
                 if (terms.size() > 0) {
                     sendReply(mc.getOutputWith(terms), client, chan);
                 } else {
                     sendReply(mc.getOutput(), client, chan);
                 }
+
             } else if (messageCount >= msgInterval
                     && msg.getChannel().getName().equals(autoChannel)) {
                 //limit autoresponse to channel

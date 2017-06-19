@@ -88,11 +88,32 @@ public class MarkovChain2 extends MarkovChain{
 
     @Override
     public String getOutputWith(List<String> with) {
-        String key_kinda = buildKey(with);
-        List<String> possibles = new ArrayList<>();
+        Map<String, Integer> matches = new HashMap<>();
+        int match_count_max = 0;
+
+        //find ALL matches
         for (Map.Entry<String, BiDiMarkovElem> entry : table.entrySet()) {
-            if (entry.getKey().toLowerCase().contains(key_kinda.toLowerCase())) {
-                possibles.add(entry.getKey());
+            int match_count = 0;
+            for (String s : with) {
+                String src_key = RECORD_SEPARATOR + s + RECORD_SEPARATOR;
+                if (entry.getKey().toLowerCase().contains(src_key.toLowerCase())) {
+                    match_count++;
+                }
+            }
+
+            if (match_count > 0) {
+                matches.put(entry.getKey(), match_count);
+                match_count_max = match_count > match_count_max ? match_count : match_count_max;
+            }
+        }
+
+        //find best possible matches
+        List<String> possibles = new ArrayList<>();
+        for (int i = match_count_max; i > 0 && possibles.isEmpty(); i--) {
+            for (Map.Entry<String, Integer> entry : matches.entrySet()) {
+                if (entry.getValue() == i) {
+                    possibles.add(entry.getKey());
+                }
             }
         }
 
