@@ -1,10 +1,11 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MarkovChain2 extends MarkovChain{
 
     public MarkovChain2(int order) {
         this.order = order;
-        table = new HashMap<>();
+        table = new ConcurrentHashMap<>();
         r = new Random();
     }
 
@@ -88,7 +89,7 @@ public class MarkovChain2 extends MarkovChain{
 
     @Override
     public String getOutputWith(List<String> with) {
-        Map<String, Integer> matches = new HashMap<>();
+        Map<String, Integer> matches = new ConcurrentHashMap<>();
         int match_count_max = 0;
 
         //find ALL matches

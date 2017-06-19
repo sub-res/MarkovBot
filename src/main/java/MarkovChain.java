@@ -1,10 +1,10 @@
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MarkovChain {
     protected int order;
     protected Map<String, BiDiMarkovElem> table;
     protected Random r;
-    protected final int CHAR_LIMIT = 2000;
     protected final String RECORD_SEPARATOR = "\u241e";
 
     //ctor
@@ -13,7 +13,7 @@ public class MarkovChain {
     //ctor
     public MarkovChain(int order) {
         this.order = order;
-        table = new HashMap<>();
+        table = new ConcurrentHashMap<>();
         r = new Random();
     }
 
@@ -109,7 +109,7 @@ public class MarkovChain {
     }
 
     public String getOutputWith(List<String> with) {
-        Map<String, Integer> matches = new HashMap<>();
+        Map<String, Integer> matches = new ConcurrentHashMap<>();
         int match_count_max = 0;
 
         //find ALL matches
