@@ -7,7 +7,7 @@ Primarily created to liven up a friend's Discord server a little, I decided to m
 
 Markov Bot reads messages from all channels it has access to, disassembles them and creates a [markov chain](https://en.wikipedia.org/wiki/Markov_chain) which it uses to spout nonsensical (and often quite humorous) replies when @-mentioned, or randomly injects a reply every x number of replies.
 
-When Markov bot is @-mentioned with one or more words enclosed within quotes in the message, Markov Bot will attempt to generate a nonsense reply that includes the words enclosed by the quotes. In all other cases, Markov Bot will choose a starting point for their response randomly. Note that these words are matched in order and are case-sensitive.
+When Markov bot is @-mentioned with one or more words enclosed within quotes in the message, Markov Bot will attempt to generate a nonsense reply that includes the words enclosed by the quotes. In all other cases, Markov Bot will choose a starting point for their response randomly. Note that these words are matched in order.
 
 ####How do I use it?
 

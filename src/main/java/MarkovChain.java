@@ -112,7 +112,7 @@ public class MarkovChain {
         String key_kinda = buildKey(with);
         List<String> possibles = new ArrayList<>();
         for (Map.Entry<String, BiDiMarkovElem> entry : table.entrySet()) {
-            if (entry.getKey().contains(key_kinda)) {
+            if (entry.getKey().toLowerCase().contains(key_kinda.toLowerCase())) {
                 possibles.add(entry.getKey());
             }
         }
