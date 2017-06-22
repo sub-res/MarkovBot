@@ -108,6 +108,23 @@ public class MarkovChain2 extends MarkovChain{
             }
         }
 
+        //find partial matches if no full match can be found
+        if (matches.isEmpty()) {
+            for (Map.Entry<String, BiDiMarkovElem> entry : table.entrySet()) {
+                int match_count = 0;
+                for (String s : with) {
+                    if (entry.getKey().toLowerCase().contains(s.toLowerCase())) {
+                        match_count++;
+                    }
+                }
+
+                if (match_count > 0) {
+                    matches.put(entry.getKey(), match_count);
+                    match_count_max = match_count > match_count_max ? match_count : match_count_max;
+                }
+            }
+        }
+
         //find best possible matches
         List<String> possibles = new ArrayList<>();
         for (int i = match_count_max; i > 0 && possibles.isEmpty(); i--) {
@@ -118,7 +135,7 @@ public class MarkovChain2 extends MarkovChain{
             }
         }
 
-        if (possibles.size() == 0) {
+        if (possibles.isEmpty()) {
             return getOutput();
         }
 
