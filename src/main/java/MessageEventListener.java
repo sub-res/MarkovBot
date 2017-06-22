@@ -71,19 +71,10 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         }
         mc.addToTable(entryset);
 
-        history = new HistoryBuffer(historySize);
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(historyFile));
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.split(" ").length > markovOrder) {
-                    history.add(line);
-                }
-            }
-        } catch (Exception e) {
-            System.err.println("Unable to read from " + historyFile + ": " + e.getMessage());
+        history = new HistoryBuffer(historySize, historyFile);
+        for (int i = 0; i < history.size(); i++) {
+            mc.addToTable(history.get(i));
         }
-        mc.addToTable(history.getBuffer());
     }
 
     @Override
@@ -171,7 +162,9 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 slurring = !slurring;
                 mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                 mc.addToTable(entryset);
-                mc.addToTable(history.getBuffer());
+                for (int i = 0; i < history.size(); i++) {
+                    mc.addToTable(history.get(i));
+                }
                 sendReply((slurring ? "Chugging rum!" : "Rum wore off..."), msg.getClient(), msg.getChannel());
                 break;
 
@@ -206,7 +199,9 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         markovOrder = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                         mc.addToTable(entryset);
-                        mc.addToTable(history.getBuffer());
+                        for (int i = 0; i < history.size(); i++) {
+                            mc.addToTable(history.get(i));
+                        }
                         setReply = splits[1] + " has been set to " + splits[2];
                         break;
                     case ("cooldown_ms"):
@@ -234,7 +229,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 String statusReply = "Status:\n" +
                         "Bot: " + (isOn ? "ON" : "OFF") + "\n" +
                         "Slurring: " + (slurring ? "ON" : "OFF") + "\n" +
-                        "History index: " + history.index() + "\n" +
+                        "History size: " + history.size() + "\n" +
                         "Autopost counter: " + messageCount + "\n" +
                         "Memory usage: " + heap_used_MB + "MB/" + heap_total_MB + "MB (max: " + heap_max_MB +"MB)";
                 sendReply(statusReply, msg.getClient(), msg.getChannel());
@@ -314,15 +309,17 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 for (String line : msgContent.split("\n")) {
                     if (line.split(" ").length > markovOrder) {
                         //refresh if recall interval is reached
-                        if (history.index() % recallInterval == 0) {
+                        if (history.counter() % recallInterval == 0) {
                             mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
                             mc.addToTable(entryset);
-                            mc.addToTable(history.getBuffer());
+                            for (int i = 0; i < history.size(); i++) {
+                                mc.addToTable(history.get(i));
+                            }
                             System.out.println("Refreshed markov chain.");
                         }
 
                         mc.addToTable(line);
-                        System.out.println("Adding: \'" + line + "\' to history (index: " + history.index() + ").");
+                        System.out.println("Adding: \'" + line + "\' to history (counter: " + history.counter() + ").");
                         history.add(line);
                     } else {
                         System.out.println("Skipping: \'" + line + "\'");
@@ -331,21 +328,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
             }
 
             //save history
-            if (history.index() % recallInterval == 0) {
-                try {
-                    FileWriter writer = new FileWriter(historyFile);
-
-                    for (String s : history.getBuffer()) {
-                        if (s != null) {
-                            writer.write(s + "\n");
-                        }
-                    }
-
-                    writer.close();
-                } catch (Exception e) {
-                    System.err.println("Unable to write to " + historyFile + ": " + e.getMessage());
-                    e.printStackTrace();
-                }
+            if (history.counter() % recallInterval == 0) {
+                history.saveTo(historyFile);
             }
         }
     }
