@@ -41,6 +41,7 @@ Markov bot also comes with a variety of bot commands. These bot commands are onl
 * ``!unban @UserName`` unbans one or more users from bot usage.
 * ``!rum`` makes Markov Bot enter slurring mode, where it builds a markov chain built on individual letters rather than words, making it seem like the bot had a little too much to drink.
 * ``!toggle`` toggles bot activation.
+* ``!purge "term"`` removes said term from markov chain and history buffer.
 * ``!set [property_name] [value]`` sets a property that's specified in config.ini if it's not restricted.
 * ``!save`` saves properties so they persist after rebooting.
 * ``!properties`` shows available properties with current values. Properties that are ``[restricted]`` cannot be changed with ``!set``.

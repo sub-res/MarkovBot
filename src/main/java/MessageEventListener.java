@@ -173,6 +173,27 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 sendReply("Bot is " + (isOn ? "on" : "off") + ".", msg.getClient(), msg.getChannel());
                 break;
 
+            case ("!purge"):
+
+                List<String> terms = new ArrayList<>();
+                Scanner sc = new Scanner(msgContent);
+                for (String s; (s = sc.findWithinHorizon("\"(.*?)\"", 0)) != null; ) {
+                    s = s.substring(1, s.length() - 1); //strip quotes
+                    terms.add(s);
+                }
+
+                if (terms.size() > 0) {
+                    history.purge(terms);
+                    history.saveTo(historyFile);
+
+                    mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                    mc.addToTable(entryset);
+                    for (int i = 0; i < history.size(); i++) {
+                        mc.addToTable(history.get(i));
+                    }
+                }
+                break;
+
             case ("!set"):
                 String[] splits = msgContent.split(" ");
                 if (splits.length < 3 || splits[1].equals("admin_ids")
@@ -253,6 +274,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         "JESUS PUT DOWN THAT RUM!\n" +
                         "``!toggle``\n" +
                         "Toggle bot activation.\n" +
+                        "``!purge \"term\"``\n" +
+                        "Purge all entries containing \"term\" from markov chain and history buffer\n" +
                         "``!set [property_name] [value]``\n" +
                         "Set a property.\n" +
                         "``!save``\n" +

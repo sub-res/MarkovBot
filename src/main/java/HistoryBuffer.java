@@ -4,6 +4,9 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HistoryBuffer {
     private int maxSize;
@@ -49,6 +52,20 @@ public class HistoryBuffer {
         } catch (Exception e) {
             System.err.println("Unable to write to " + fileName + ": " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    public void purge(List<String> terms) {
+        ListIterator<String> iter = buffer.listIterator();
+        while (iter.hasNext()) {
+            String s = iter.next();
+            for (String term : terms) {
+                if (s.contains(term)) {
+                    iter.remove();
+                    counter--;
+                    break;
+                }
+            }
         }
     }
 
