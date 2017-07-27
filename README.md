@@ -47,7 +47,7 @@ Markov bot also comes with a variety of bot commands. These bot commands are onl
 * ``!set [property_name] [value]`` sets a property that's specified in config.ini if it's not restricted.
 * ``!save`` saves properties so they persist after rebooting.
 * ``!properties`` shows available properties with current values. Properties that are ``[restricted]`` cannot be changed with ``!set``.
-* ``!status`` shows minor debug information such as history size, number of messages since last autopost, whether the bot is on or not, whether slurring mode is on or not, and memory usage.
+* ``!status`` shows minor debug information such as history size, history counter, markov table size, number of messages since last autopost, whether the bot is on or not, whether slurring mode is on or not, and memory usage.
 
 ####So is there anything wrong with it?
 

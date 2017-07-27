@@ -256,6 +256,8 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         "Bot: " + (isOn ? "ON" : "OFF") + "\n" +
                         "Slurring: " + (slurring ? "ON" : "OFF") + "\n" +
                         "History size: " + history.size() + "\n" +
+                        "History counter: " + history.counter() + "\n" +
+                        "Markov table size: " + mc.getTableSize() + "\n" +
                         "Autopost counter: " + messageCount + "\n" +
                         "Memory usage: " + heap_used_MB + "MB/" + heap_total_MB + "MB (max: " + heap_max_MB +"MB)";
                 sendReply(statusReply, msg.getClient(), msg.getChannel());

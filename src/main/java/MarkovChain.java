@@ -175,6 +175,10 @@ public class MarkovChain {
         return left + right;
     }
 
+    public int getTableSize() {
+        return table.size();
+    }
+
     //get output string from markov chain
     private String getOutputRight(List<String> start) {
         List<String> output = new ArrayList<>();
