@@ -8,10 +8,7 @@ import sx.blah.discord.util.*;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private int historySize = Integer.parseInt(BotProperties.instance().get("hist_size"));
@@ -19,6 +16,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private int msgInterval = Integer.parseInt(BotProperties.instance().get("msg_ival"));
     private int markovOrder = Integer.parseInt(BotProperties.instance().get("markov_order"));
     private long cooldownMs = Integer.parseInt(BotProperties.instance().get("cooldown_ms"));
+    private long cooldownMsUser = Integer.parseInt(BotProperties.instance().get("cooldown_ms_user"));
     private String historyFile = BotProperties.instance().get("history_file");
     private String entrysetFile = BotProperties.instance().get("entryset_file");
     private String autoChannel = BotProperties.instance().get("auto_channel");
@@ -33,9 +31,12 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private boolean slurring = false;
     private boolean isOn = true;
 
+    private Map<Long, Long> timeOutList;
+
     public MessageEventListener() {
         lastRequest = 0;
         messageCount = 0;
+        timeOutList = new HashMap<>();
 
         //init ids lists
         adminIDs = new ArrayList<>();
@@ -229,6 +230,10 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         cooldownMs = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         setReply = splits[1] + " has been set to " + splits[2];
                         break;
+                    case ("cooldown_ms_user"):
+                        cooldownMsUser = Integer.parseInt(BotProperties.instance().get(splits[1]));
+                        setReply = splits[1] + " has been set to " + splits[2];
+                        break;
                     default:
                         setReply = "unrecognized or restricted property: " + splits[1];
                         break;
@@ -305,14 +310,27 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
 
         String myID = client.getOurUser().getStringID();
 
+        //update individual cooldowns list
+        Iterator<Map.Entry<Long, Long>> it = timeOutList.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<Long, Long> entry = it.next();
+            if (System.currentTimeMillis() > entry.getValue() + cooldownMsUser) {
+                it.remove();
+            }
+        }
+
         if (!msg.getAuthor().getStringID().equals(client.getOurUser().getStringID())
                 && !chan.getName().equals(msg.getAuthor().getName())) {
             messageCount++;
 
             if ((msgContent.contains("<@" + myID + ">")
-                    && System.currentTimeMillis() > lastRequest + cooldownMs)) {
+                    && System.currentTimeMillis() > lastRequest + cooldownMs)
+                    && !timeOutList.containsKey(msg.getAuthor().getLongID())) {
                 //generate reply when @-mentioned
                 lastRequest = System.currentTimeMillis(); //reset cooldown
+
+                //apply individual cooldown
+                timeOutList.put(msg.getAuthor().getLongID(), System.currentTimeMillis());
 
                 List<String> terms = getTerms(msgContent);
                 if (terms.size() > 0) {

@@ -26,6 +26,8 @@ Here is a rundown of the properties in config.ini:
 * ``hist_size`` is the maximum amount of messages that Markov Bot will keep track of. Keep in mind that too many messages may cause Markov Bot to run out of memory!
 * ``recall_ival`` is the message amount interval between which Markov Bot will save its message history to history.txt
 * ``msg_ival`` is the message amount interval between which Markov Bot will autopost in the specified autoposting channel (currently restricted to 1 channel).
+* ``cooldown_ms`` is the GLOBAL cooldown time for being able to @ Markov Bot.
+* ``cooldown_ms_user`` is the cooldown time for being able to @ Markov Bot PER USER.
 * ``markov_order`` is the amount of words (or the amount of letters + 1 if slurring is enabled; see below for details on slurring mode) the markov chain will use to predict the next word. The lower this value, the more nonsensical Markov Bot becomes. Conversely, the higher this value, the more it will lean towards quoting messages verbatim.
 * ``history_file`` specifies the history file where Markov Bot saves its messages. I do not recommend changing this.
 * ``entryset_file`` specifies the file that contains Markov Bot's permanent set, i.e. messages that will persist unlike those in the history file.
