@@ -234,6 +234,10 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         cooldownMsUser = Integer.parseInt(BotProperties.instance().get(splits[1]));
                         setReply = splits[1] + " has been set to " + splits[2];
                         break;
+                    case ("auto_channel"):
+                        autoChannel = BotProperties.instance().get(splits[1]);
+                        setReply = splits[1] + " has been set to " + splits[2];
+                        break;
                     default:
                         setReply = "unrecognized or restricted property: " + splits[1];
                         break;
@@ -247,7 +251,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 break;
 
             case ("!status"):
-                final int mb = 1024 * 2014;
+                final int mb = 1024 * 1024;
                 Runtime rt = Runtime.getRuntime();
                 long heap_used_MB = (rt.totalMemory() - rt.freeMemory()) / mb;
                 long heap_total_MB = rt.totalMemory() / mb;
