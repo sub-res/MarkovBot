@@ -2,17 +2,19 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class MarkovChain {
-    protected int order;
-    protected Map<String, BiDiMarkovElem> table;
-    protected Random r;
-    protected final String RECORD_SEPARATOR = "\u241e";
+    private int order;
+    private Map<String, BiDiMarkovElem> table;
+    private Random r;
+    private final String RECORD_SEPARATOR = "\u241e";
+    private Splitter splitter;
 
     //ctor
     public MarkovChain(){}
 
     //ctor
-    public MarkovChain(int order) {
+    public MarkovChain(int order, Splitter splitter) {
         this.order = order;
+        this.splitter = splitter;
         table = new ConcurrentHashMap<>();
         r = new Random();
     }
@@ -37,7 +39,7 @@ public class MarkovChain {
             return;
         }
 
-        List<String> atoms = atomize(input);
+        List<String> atoms = splitter.atomize(input);
 
         if (atoms.size() >= order + 1) {
             for (int i = 0; i < atoms.size() - order + 1; i++) {
@@ -213,12 +215,7 @@ public class MarkovChain {
             startidx++;
         }
 
-        String outputStr = "";
-        for (String s : output) {
-            outputStr += s + " ";
-        }
-
-        return outputStr;
+        return splitter.concatRight(output);
     }
 
     private String getOutputLeft(List<String> start)
@@ -253,18 +250,7 @@ public class MarkovChain {
             output.remove(0);
         }
 
-        String outputString = "";
-        for (String s : output) {
-            if (!s.isEmpty()) {
-                outputString = s + " " + outputString;
-            }
-        }
-
-        return outputString;
-    }
-
-    private List<String> atomize(String s) {
-        return Arrays.asList(s.split(" "));
+        return splitter.concatLeft(output);
     }
 
     protected String buildKey(List<String> prevs) {

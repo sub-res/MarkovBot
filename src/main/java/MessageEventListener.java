@@ -56,7 +56,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
         }
 
         //init markov chain
-        mc = new MarkovChain(markovOrder);
+        mc = new MarkovChain(markovOrder, new Splitter());
 
         entryset = new ArrayList<>();
         try {
@@ -161,7 +161,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
 
             case ("!rum"):
                 slurring = !slurring;
-                mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                mc = slurring ? new MarkovChain(markovOrder + 1, new SplitterLetter()) : new MarkovChain(markovOrder, new Splitter());
                 mc.addToTable(entryset);
                 for (int i = 0; i < history.size(); i++) {
                     mc.addToTable(history.get(i));
@@ -187,7 +187,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     history.purge(terms);
                     history.saveTo(historyFile);
 
-                    mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                    mc = slurring ? new MarkovChain(markovOrder + 1, new SplitterLetter()) : new MarkovChain(markovOrder, new Splitter());
                     mc.addToTable(entryset);
                     for (int i = 0; i < history.size(); i++) {
                         mc.addToTable(history.get(i));
@@ -219,7 +219,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                         break;
                     case ("markov_order"):
                         markovOrder = Integer.parseInt(BotProperties.instance().get(splits[1]));
-                        mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                        mc = slurring ? new MarkovChain(markovOrder + 1, new SplitterLetter()) : new MarkovChain(markovOrder, new Splitter());
                         mc.addToTable(entryset);
                         for (int i = 0; i < history.size(); i++) {
                             mc.addToTable(history.get(i));
@@ -357,7 +357,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                     if (line.split(" ").length > markovOrder) {
                         //refresh if recall interval is reached
                         if (history.counter() % recallInterval == 0) {
-                            mc = slurring ? new MarkovChain2(markovOrder + 1) : new MarkovChain(markovOrder);
+                            mc = slurring ? new MarkovChain(markovOrder, new SplitterLetter()) : new MarkovChain(markovOrder, new Splitter());
                             mc.addToTable(entryset);
                             for (int i = 0; i < history.size(); i++) {
                                 mc.addToTable(history.get(i));
