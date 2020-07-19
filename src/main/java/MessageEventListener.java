@@ -422,7 +422,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
     private List<String> getTerms(String msg) {
         List<String> terms = new ArrayList<>();
         Scanner sc = new Scanner(msg);
-        for (String s ; (s = sc.findWithinHorizon("\"(.*?)\"", 0)) != null;) {
+        for (String s ; (s = sc.findWithinHorizon("[\"“”](.*?)[\"“”]", 0)) != null;) {
             s = s.substring(1, s.length() - 1); //strip quotes
             String[] splits = s.split(" ");
             for (String split : splits) {
