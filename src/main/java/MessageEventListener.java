@@ -329,7 +329,7 @@ public class MessageEventListener implements IListener<MessageReceivedEvent> {
                 && !chan.getName().equals(msg.getAuthor().getName())) {
             messageCount++;
 
-            if (((msgContent.contains("<@" + myID + ">") || msgContent.contains("<@" + myID + ">"))
+            if (((msgContent.contains("<@" + myID + ">") || msgContent.contains("<@!" + myID + ">"))
                     && System.currentTimeMillis() > lastRequest + cooldownMs)
                     && !timeOutList.containsKey(msg.getAuthor().getLongID())) {
                 //generate reply when @-mentioned
